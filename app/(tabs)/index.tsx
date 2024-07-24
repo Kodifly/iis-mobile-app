@@ -1,70 +1,132 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  TextInput,
+  SafeAreaView,
+} from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
+import { Icon } from "react-native-elements";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+import { Card } from "react-native-paper";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const defaultRegion: Region = {
+  latitude: 22.3193,
+  longitude: 114.1694,
+  latitudeDelta: 0.0922,
+  longitudeDelta: 0.0421,
+};
 
-export default function HomeScreen() {
+const MapPage: React.FC = () => {
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useState(true);
+
+  const handleStartDateChange = (
+    _: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    const currentDate = selectedDate || startDate;
+    setShowStartDatePicker(false);
+    setStartDate(currentDate);
+  };
+
+  const handleEndDateChange = (_: DateTimePickerEvent, selectedDate?: Date) => {
+    const currentDate = selectedDate || endDate;
+    setShowEndDatePicker(false);
+    setEndDate(currentDate);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <Card style={styles.card}>
+          <TouchableOpacity onPress={() => setFiltersVisible(!filtersVisible)}>
+            <Icon name="filter-list" size={30} />
+          </TouchableOpacity>
+          {filtersVisible && (
+            <View style={styles.filters}>
+              <TouchableOpacity onPress={() => setShowStartDatePicker(true)}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Start Date"
+                  value={startDate.toDateString()}
+                  editable={false}
+                />
+              </TouchableOpacity>
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={startDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleStartDateChange}
+                />
+              )}
+              <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="End Date"
+                  value={endDate.toDateString()}
+                  editable={false}
+                />
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={endDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleEndDateChange}
+                />
+              )}
+            </View>
+          )}
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            region={defaultRegion}
+            showsUserLocation={true}
+            zoomControlEnabled={true}
+          >
+            <Marker
+              coordinate={{ latitude: 22.3193, longitude: 114.1694 }}
+              title="Hong Kong"
+              description="Hong Kong Marker"
+            />
+          </MapView>
+        </Card>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 48,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  card: {
+    flex: 1,
+    padding: 0,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  filters: {
+    padding: 16,
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 16,
+    padding: 8,
+  },
+  map: {
+    height: 400,
+    width: "100%",
   },
 });
+
+export default MapPage;
